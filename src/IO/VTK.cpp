@@ -695,7 +695,12 @@ void VTK::writeData( ){
     int                 length;
     char*               buffer ;
 
-    str.open( m_fh.getPath( ), std::ios::in | std::ios::out ) ;
+    str.open( m_fh.getPath( ), std::ios::in | std::ios::out| std::ios::binary) ;
+    if (!str.is_open()) {
+        throw std::runtime_error("Cannot create file \"" + m_fh.getName() + "\"" + " inside the directory \"" + m_fh.getDirectory() + "\"");
+    }
+    //Position the input stream at the beginning of the stream
+    str.seekg(0, std::ios::beg);
 
     { // Write Ascii
 
@@ -743,6 +748,8 @@ void VTK::writeData( ){
                 }
 
                 str << std::endl ;
+                //despite the name, this is a reinterpret cast of char array into a char array.
+                // so hopefully it should not mess with contents.
                 genericIO::flushBINARY( str, buffer, length) ;
 
                 delete [] buffer ;
@@ -792,13 +799,14 @@ void VTK::writeData( ){
         position_insert = str.tellg();
         genericIO::copyUntilEOFInString( str, buffer, length );
 
-        str.close();
-        str.clear();
+        // str.close();
+        // str.clear();
+        // //Reopening in binary mode
+        // str.open( m_fh.getPath( ), std::ios::out | std::ios::in | std::ios::binary);
+        // if (!str.is_open()) {
+        //     throw std::runtime_error("Cannot open file \"" + m_fh.getName() + "\"" + " inside the directory \"" + m_fh.getDirectory() + "\"");
+        // }
 
-
-        //Reopening in binary mode
-        str.open( m_fh.getPath( ), std::ios::out | std::ios::in | std::ios::binary);
-        str.seekg( position_insert) ;
 
         //str.open( "data.dat", std::ios::out | std::ios::binary);
 
@@ -874,7 +882,8 @@ void VTK::writeData( ){
         delete [] buffer ;
     }
 
-    // Closing Appended Secyion
+
+    // Closing Section
     str.close();
 
 }
@@ -991,7 +1000,7 @@ void VTK::readData( ){
     uint32_t                  nbytes32 ;
     uint64_t                  nbytes64 ;
 
-    str.open( m_fh.getPath( ), std::ios::in ) ;
+    str.open( m_fh.getPath( ), std::ios::in | std::ios::binary ) ;
 
     //Read appended data
     //Go to the initial position of the appended section
@@ -1006,11 +1015,11 @@ void VTK::readData( ){
 
         position_appended = str.tellg();
 
-        str.close();
-        str.clear();
-
-        //Open in binary for read
-        str.open( m_fh.getPath( ), std::ios::in | std::ios::binary);
+        // str.close();
+        // str.clear();
+        //
+        // //Open in binary for read
+        // str.open( m_fh.getPath( ), std::ios::in | std::ios::binary);
 
         //Read appended data
         for( auto & field : m_data){
@@ -1062,7 +1071,7 @@ void VTK::readData( ){
         }
 
         str.close();
-        str.open( m_fh.getPath( ), std::ios::in ) ;
+        str.open( m_fh.getPath( ), std::ios::in | std::ios::binary ) ;
 
     }
 

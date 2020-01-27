@@ -286,7 +286,7 @@ uint64_t VTKUnstructuredGrid::readConnectivityEntries( ){
     }
 
     if( m_geometry[connectivity_gid].getCodification() == VTKFormat::APPENDED ){
-        str.open( m_fh.getPath( ), std::ios::in ) ;
+        str.open( m_fh.getPath( ), std::ios::in|std::ios::binary ) ;
         //Go to the initial position of the appended section
         while( getline(str, line) && (! bitpit::utils::string::keywordInString( line, "<AppendedData")) ){}
         str >> c_;
@@ -320,7 +320,7 @@ uint64_t VTKUnstructuredGrid::readConnectivityEntries( ){
 
     //Open in ascii for read
     if(  m_geometry[connectivity_gid].getCodification() == VTKFormat::ASCII ){
-        str.open( m_fh.getPath( ), std::ios::in);
+        str.open( m_fh.getPath( ), std::ios::in | std::ios::binary);
         str.seekg( m_geometry[connectivity_gid].getPosition() ) ;
 
         std::string              line ;
@@ -362,7 +362,7 @@ uint64_t VTKUnstructuredGrid::readFaceStreamEntries( ){
     if(!m_geometry[facestream_gid].hasAllMetaData() || !m_geometry[facestream_gid].isEnabled()) return nface;
 
     if( m_geometry[facestream_gid].getCodification() == VTKFormat::APPENDED ){
-        str.open( m_fh.getPath( ), std::ios::in ) ;
+        str.open( m_fh.getPath( ), std::ios::in | std::ios::binary ) ;
         //Go to the initial position of the appended section
         while( getline(str, line) && (! bitpit::utils::string::keywordInString( line, "<AppendedData")) ){}
         str >> c_;
@@ -393,7 +393,7 @@ uint64_t VTKUnstructuredGrid::readFaceStreamEntries( ){
 
     //Open in ASCII for read
     if(  m_geometry[facestream_gid].getCodification() == VTKFormat::ASCII ){
-        str.open( m_fh.getPath( ), std::ios::in );
+        str.open( m_fh.getPath( ), std::ios::in| std::ios::binary );
         str.seekg( m_geometry[facestream_gid].getPosition() ) ;
 
         std::string              line ;
@@ -526,7 +526,9 @@ void VTKUnstructuredGrid::readMetaInformation( ){
 
     std::fstream::pos_type        position;
 
-    str.open( m_fh.getPath( ), std::ios::in ) ;
+    // open always as binary to call safely seekg/tellg. Their output is
+    // not trustable if opened in text mode.
+    str.open( m_fh.getPath( ), std::ios::in | std::ios::binary) ;
 
     getline( str, line);
     while( ! bitpit::utils::string::keywordInString( line, "<VTKFile")){
@@ -554,7 +556,7 @@ void VTKUnstructuredGrid::readMetaInformation( ){
     // Read metadata information
     for( auto &field : m_geometry ){ 
         str.seekg( position) ;
-        if( ! readDataArray( str, field ) ) {
+        if( ! readDataArray( str, field ) ) { //F.E. readDataArray will use tellg to get position of the field.
 #if BITPIT_ENABLE_DEBUG
             log::cout() <<"Geometry field " << field.getName() << " not found, it will be disabled" << std::endl ;
 #endif
