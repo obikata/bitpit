@@ -338,7 +338,7 @@ uint64_t VTKUnstructuredGrid::readConnectivityEntries( ){
     }
 
     if( m_geometry[connectivity_gid].getCodification() == VTKFormat::APPENDED ){
-        str.open( m_fh.getPath( ), std::ios::in ) ;
+        str.open( m_fh.getPath( ), std::ios::in | std::ios::binary ) ;
         //Go to the initial position of the appended section
         while( getline(str, line) && (! bitpit::utils::string::keywordInString( line, "<AppendedData")) ){}
         str >> c_;
@@ -372,7 +372,7 @@ uint64_t VTKUnstructuredGrid::readConnectivityEntries( ){
 
     //Open in ascii for read
     if(  m_geometry[connectivity_gid].getCodification() == VTKFormat::ASCII ){
-        str.open( m_fh.getPath( ), std::ios::in);
+        str.open( m_fh.getPath( ), std::ios::in | std::ios::binary);
         str.seekg( m_geometry[connectivity_gid].getPosition() ) ;
 
         std::string              line ;
@@ -414,7 +414,7 @@ uint64_t VTKUnstructuredGrid::readFaceStreamEntries( ){
     if(!m_geometry[facestream_gid].hasAllMetaData() || !m_geometry[facestream_gid].isEnabled()) return nface;
 
     if( m_geometry[facestream_gid].getCodification() == VTKFormat::APPENDED ){
-        str.open( m_fh.getPath( ), std::ios::in ) ;
+        str.open( m_fh.getPath( ), std::ios::in | std::ios::binary ) ;
         //Go to the initial position of the appended section
         while( getline(str, line) && (! bitpit::utils::string::keywordInString( line, "<AppendedData")) ){}
         str >> c_;
@@ -445,7 +445,7 @@ uint64_t VTKUnstructuredGrid::readFaceStreamEntries( ){
 
     //Open in ASCII for read
     if(  m_geometry[facestream_gid].getCodification() == VTKFormat::ASCII ){
-        str.open( m_fh.getPath( ), std::ios::in );
+        str.open( m_fh.getPath( ), std::ios::in | std::ios::binary );
         str.seekg( m_geometry[facestream_gid].getPosition() ) ;
 
         std::string              line ;
@@ -475,6 +475,8 @@ void VTKUnstructuredGrid::writeMetaInformation( ){
     std::fstream str ;
 
     str.open( m_fh.getPath( ), std::ios::out ) ;
+    //HERE you are writing only ascii info, without retrieving stream position with seekg/tellg.
+    //It is safe to open it in text/ascii mode.
     if (!str.is_open()) {
         throw std::runtime_error("Cannot create file \"" + m_fh.getName() + "\"" + " inside the directory \"" + m_fh.getDirectory() + "\"");
     }
@@ -584,7 +586,9 @@ void VTKUnstructuredGrid::readMetaInformation( ){
 
     std::fstream::pos_type        position;
 
-    str.open( m_fh.getPath( ), std::ios::in ) ;
+    str.open( m_fh.getPath( ), std::ios::in | std::ios::binary ) ;
+    //HERE there is no explicit seekg/tellg call on the stream, but method readDataArray
+    //called after will employ them internally. So open this stream as binary.
 
     getline( str, line);
     while( ! bitpit::utils::string::keywordInString( line, "<VTKFile")){

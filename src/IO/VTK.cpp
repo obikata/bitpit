@@ -33,14 +33,14 @@ namespace bitpit{
 /*!
  * @ingroup VisualizationToolKit
  * @interface VTK
- * @brief A base class for VTK input output. 
+ * @brief A base class for VTK input output.
  *
  * VTK provides all basic methods for reading and writing VTK files.
  * ASCII and APPENDED mode are supported.
  *
  */
 
-/*! 
+/*!
  * Default constructor referes to a serial VTK file with appended binary data.
  */
 VTK::VTK(){
@@ -49,7 +49,7 @@ VTK::VTK(){
     m_rank  = 0;
 
     m_headerType = "UInt32" ;
-    
+
     m_fh.setDirectory( "." ) ;
     m_fh.setSeries( false ) ;
     m_fh.setParallel( false ) ;
@@ -62,7 +62,7 @@ VTK::VTK(){
 
 }
 
-/*! 
+/*!
  * Constructor referes to a serial VTK file with appended binary data.
  * @param[in]  dir    directory of file with final "/"
  * @param[in]  name   file name without suffix
@@ -74,7 +74,7 @@ VTK::VTK(const std::string &dir, const std::string &name ):
 
 }
 
-/*! 
+/*!
  * set header type for appended binary output
  * @param[in] st header type ["UInt32"/"UInt64"]
  */
@@ -90,15 +90,15 @@ void  VTK::setHeaderType(const std::string &st){
 
 }
 
-/*! 
+/*!
  * Get header type for appended binary output
  * @return header type ["UInt32"/"UInt64"]
  */
-std::string  VTK::getHeaderType( ) const{ 
+std::string  VTK::getHeaderType( ) const{
     return m_headerType ;
 }
 
-/*! 
+/*!
  * set directory and name for VTK file
  * @param[in] dir directory of file with final "/"
  * @param[in] name file name without suffix
@@ -152,7 +152,7 @@ std::string  VTK::getDirectory() const {
  * Activates output for time series. sets series to true first output index to input
  * @param[in] counter first output index
  */
-void  VTK::setCounter( int counter){ 
+void  VTK::setCounter( int counter){
 
   m_fh.setSeries(true) ;
   m_fh.setCounter(counter) ;
@@ -160,22 +160,22 @@ void  VTK::setCounter( int counter){
 }
 
 /*!
- * De-activates output for time series. 
+ * De-activates output for time series.
  * @return last value of counter
  */
-int  VTK::unsetCounter( ){ 
+int  VTK::unsetCounter( ){
 
   int counter = m_fh.getCounter() ;
   m_fh.setSeries(false) ;
 
-  return counter; 
+  return counter;
 }
 
 /*!
  * Returns the time index of the following file
- * @return counter 
+ * @return counter
  */
-int  VTK::getCounter( ) const{ 
+int  VTK::getCounter( ) const{
 
   return m_fh.getCounter( ) ;
 
@@ -186,13 +186,13 @@ int  VTK::getCounter( ) const{
  * @param[in] procs number of processes
  * @param[in] rank my rank
  */
-void  VTK::setParallel( uint16_t procs, uint16_t rank){ 
+void  VTK::setParallel( uint16_t procs, uint16_t rank){
 
   if( procs <  1 ) log::cout() << " Numer of processes must be greater than 0" << std::endl ;
   if( rank  >= procs) log::cout() << " m_rankess is not in valid range " << std::endl ;
 
-  m_procs = procs; 
-  m_rank  = rank; 
+  m_procs = procs;
+  m_rank  = rank;
 
   if(m_procs == 0) {
    m_fh.setParallel(false) ;
@@ -282,7 +282,7 @@ VTKField& VTK::addData( VTKField &&field ){
 }
 
 /*!
- * Add user data for input or output. 
+ * Add user data for input or output.
  * Codification will be set according to default value [appended] or to value
  * set by VTK::setDataCodex( VTKFormat ) or VTK::setCodex( VTKFormat )
  * @param[in] name name of field
@@ -323,7 +323,7 @@ void VTK::removeData( const std::string &name ){
         } else {
             ++fieldItr;
         }
-    } 
+    }
 
     log::cout() << "did not find field for removing in VTK: " << name << std::endl;
 
@@ -642,12 +642,12 @@ void VTK::write( VTKWriteMode writeMode ){
 
     if( writeMode == VTKWriteMode::NO_SERIES ){
         counter = unsetCounter() ;
-    } 
+    }
 
     if( writeMode == VTKWriteMode::NO_INCREMENT ){
         counter = getCounter() -1 ;
         setCounter( counter) ;
-    } 
+    }
 
     checkAllFields() ;
     calcAppendedOffsets() ;
@@ -695,12 +695,21 @@ void VTK::writeData( ){
     int                 length;
     char*               buffer ;
 
-    str.open( m_fh.getPath( ), std::ios::in | std::ios::out ) ;
+
+    str.open( m_fh.getPath( ), std::ios::in | std::ios::out | std::ios::binary ) ;
+    // note for developers. Opening this ascii header in binary is necessary to
+    // make seekg/tellg methods (used after) works properly. Ascii opening does not
+    // guarantee a correct stream moving/re-positioning, because of automatic jump of escape
+    // characters \n (unix) \r\n (windows). Binary opening does the trick.
     if (!str.is_open()) {
         throw std::runtime_error("Cannot create file \"" + m_fh.getName() + "\"" + " inside the directory \"" + m_fh.getDirectory() + "\"");
     }
+    //Position the input stream at the beginning
+    str.seekg(0, std::ios::beg);
 
-    { // Write Ascii
+    { // Write Ascii - writing ascii on a binary opened
+      // file - genericIO::flushBinary (reinterpret_cast of chars into chars)
+      // ensure consistent results.
 
         position_insert = str.tellg();
 
@@ -746,7 +755,7 @@ void VTK::writeData( ){
                 }
 
                 str << std::endl ;
-                genericIO::flushBINARY( str, buffer, length) ;
+                genericIO::flushBINARY( str, buffer, length) ;  // this is basically a reinterpret_cast of chars into chars. It should be safe in this context
 
                 delete [] buffer ;
             }
@@ -769,7 +778,7 @@ void VTK::writeData( ){
                 }
 
                 str << std::endl ;
-                genericIO::flushBINARY( str, buffer, length) ;
+                genericIO::flushBINARY( str, buffer, length) ;  // this is basically a reinterpret_cast of chars into chars. It should be safe in this context
 
                 delete [] buffer ;
             }
@@ -795,20 +804,6 @@ void VTK::writeData( ){
         position_insert = str.tellg();
         genericIO::copyUntilEOFInString( str, buffer, length );
 
-        str.close();
-        str.clear();
-
-
-        //Reopening in binary mode
-        str.open( m_fh.getPath( ), std::ios::out | std::ios::in | std::ios::binary);
-        if (!str.is_open()) {
-            throw std::runtime_error("Cannot open file \"" + m_fh.getName() + "\"" + " inside the directory \"" + m_fh.getDirectory() + "\"");
-        }
-
-        str.seekg( position_insert) ;
-
-        //str.open( "data.dat", std::ios::out | std::ios::binary);
-
         //Writing first point data then cell data
         for( auto &field : m_data ){
             if( field.isEnabled() && field.getCodification() == VTKFormat::APPENDED && field.getLocation() == VTKLocation::POINT ) {
@@ -829,7 +824,7 @@ void VTK::writeData( ){
                     assert(false);
                 }
             }
-        } 
+        }
 
         for( auto &field : m_data ){
             if( field.isEnabled() && field.getCodification() == VTKFormat::APPENDED && field.getLocation() == VTKLocation::CELL ) {
@@ -852,7 +847,7 @@ void VTK::writeData( ){
                 }
 
             }
-        } 
+        }
 
         //Writing Geometry Data
         for( auto &field : m_geometry ){
@@ -881,7 +876,7 @@ void VTK::writeData( ){
         delete [] buffer ;
     }
 
-    // Closing Appended Secyion
+    // Closing Appended Section
     str.close();
 
 }
@@ -938,7 +933,7 @@ void VTK::writeDataHeader( std::fstream &str, bool parallel ){
         //Writing DataArray
         for( auto &field : m_data ){
             if( field.isEnabled() && field.getLocation() == location && !parallel) writeDataArray( str, field ) ;
-            if( field.isEnabled() && field.getLocation() == location &&  parallel) writePDataArray( str, field ); 
+            if( field.isEnabled() && field.getLocation() == location &&  parallel) writePDataArray( str, field );
         }
 
         str << "      </" ;
@@ -998,7 +993,7 @@ void VTK::readData( ){
     uint32_t                  nbytes32 ;
     uint64_t                  nbytes64 ;
 
-    str.open( m_fh.getPath( ), std::ios::in ) ;
+    str.open( m_fh.getPath( ), std::ios::in | std::ios::binary) ;
 
     //Read appended data
     //Go to the initial position of the appended section
@@ -1013,11 +1008,6 @@ void VTK::readData( ){
 
         position_appended = str.tellg();
 
-        str.close();
-        str.clear();
-
-        //Open in binary for read
-        str.open( m_fh.getPath( ), std::ios::in | std::ios::binary);
 
         //Read appended data
         for( auto & field : m_data){
@@ -1068,12 +1058,15 @@ void VTK::readData( ){
             }
         }
 
-        str.close();
-        str.open( m_fh.getPath( ), std::ios::in ) ;
+        str.clear();
+        str.seekg(0, std::ios::beg) ;
+        //leave the file opened in binary mode and reposition it to the start,
+        // to ensure correct seekg/tellg of the stream even in
+        // the case of the follow up Read Ascii data.
 
     }
 
-    
+
     //Read ascii data
     for( auto & field : m_data ){
         if( field.isEnabled() &&  field.getCodification() == VTKFormat::ASCII){
@@ -1157,7 +1150,7 @@ void VTK::readDataHeader( std::fstream &str ){
         ss << "</" << locationString << "Data>" ;
         loc = ss.str();
 
-        read= true ; 
+        read= true ;
         if( ! getline( str, line) ) read = false ;
         if( bitpit::utils::string::keywordInString( line, loc) ) read=false ;
 
@@ -1170,7 +1163,7 @@ void VTK::readDataHeader( std::fstream &str ){
                 }
 
                 else{
-                    pos_ =  0 ; 
+                    pos_ =  0 ;
                 }
 
                 temp.setPosition( pos_ ) ;
@@ -1231,7 +1224,7 @@ bool VTK::readDataArray( std::fstream &str, VTKField &field  ){
         }
     }
 
-    return false ; 
+    return false ;
 
 }
 
