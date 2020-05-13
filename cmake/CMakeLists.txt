@@ -46,6 +46,47 @@ foreach(MODULE_NAME IN LISTS BITPIT_MODULE_LIST)
     endif()
 endforeach()
 
+#------------------------------------------------------------------------------------#
+#create sanitized version of BITPIT_EXTERNAL_LIBRARIES and BITPIT_EXTERNAL_INCLUDE_DIRS
+# i.e. remove possible duplicated entries.
+#------------------------------------------------------------------------------------#
+
+list(INSERT BITPIT_EXTERNAL_LIBRARIES_SANITIZED 0 ${BITPIT_EXTERNAL_LIBRARIES})
+list(INSERT BITPIT_EXTERNAL_INCLUDE_DIRS_SANITIZED 0 ${BITPIT_EXTERNAL_INCLUDE_DIRS})
+
+list(REMOVE_DUPLICATES BITPIT_EXTERNAL_LIBRARIES_SANITIZED)
+list(REMOVE_DUPLICATES BITPIT_EXTERNAL_INCLUDE_DIRS_SANITIZED)
+
+#------------------------------------------------------------------------------------#
+#SPECIAL ISSUE FOR PETSC ONLY: In case of Windows MinGW + Shared libs compilation,
+#inside the list BITPIT_EXTERNAL_LIBRARIES_SANITIZED check if petsc
+#library is linked static (find entry in the list containing libpetsc.a) and remove that
+#entry. The last one creates conflict with MinGW generated imported library libbitpit.dll.a
+#(which already linked libpetsc.a internally), when used in other windows projects linking
+#dll shared bitpit.
+#------------------------------------------------------------------------------------#
+
+if(MINGW AND BUILD_SHARED_LIBS)
+    set(STASHPETSC "")
+
+    foreach(ENTRY IN LISTS BITPIT_EXTERNAL_LIBRARIES_SANITIZED)
+        string(FIND ${ENTRY} "petsc.a" _index)
+        if(${_index} GREATER -1)
+            set(STASHPETSC ${ENTRY})
+        endif()
+    unset(_index)
+    endforeach()
+
+    if(STASHPETSC)
+        list(REMOVE_ITEM BITPIT_EXTERNAL_LIBRARIES_SANITIZED ${STASHPETSC})
+    endif()
+
+    unset(STASHPETSC)
+endif()
+#------------------------------------------------------------------------------------#
+# Generate BITPITConfig.cmake
+#------------------------------------------------------------------------------------#
+
 configure_file("BITPITConfig.cmake.in"  "${CMAKE_CURRENT_BINARY_DIR}/BITPITConfig.cmake" @ONLY)
 
 #------------------------------------------------------------------------------------#
