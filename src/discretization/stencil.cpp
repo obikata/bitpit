@@ -37,6 +37,30 @@ template class DiscreteStencil<double>;
 template class DiscreteStencil<std::array<double, 3>>;
 template class DiscreteStencil<std::vector<double>>;
 
+/**
+ * Set the source value into the target.
+ *
+ * \param source is the value that will be set
+ * \param[out] target on output will contain the source value
+ */
+template<>
+void DiscreteStencil<std::array<double, 3>>::rawCopyValue(const std::array<double, 3> &source, std::array<double, 3> *target)
+{
+    std::copy_n(source.data(), source.size(), target->data());
+}
+
+/**
+ * Set the source value into the target.
+ *
+ * \param source is the value that will be set
+ * \param[out] target on output will contain the source value
+ */
+template<>
+void DiscreteStencil<std::vector<double>>::rawCopyValue(const std::vector<double> &source, std::vector<double> *target)
+{
+    std::copy_n(source.data(), source.size(), target->data());
+}
+
 }
 
 /*!
