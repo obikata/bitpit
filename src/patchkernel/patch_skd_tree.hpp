@@ -206,6 +206,8 @@ public:
     void evalPointGlobalDistance(const std::size_t nPoints, const std::array<double, 3> *points, double maxDistance, double *distances) const;
     void findPointClosestGlobalCell(const std::size_t nPoints, const std::array<double, 3> *points, long *ids, int *ranks, double *distances) const;
     void findPointClosestGlobalCell(const std::size_t nPoints, const std::array<double, 3> *points, double maxDistance, long *ids, int *ranks, double *distances) const;
+    void findSharedPointClosestGlobalCell(const std::size_t nPoints, const std::array<double, 3> *points, long *ids, int *ranks, double *distances) const;
+    void findSharedPointClosestGlobalCell(const std::size_t nPoints, const std::array<double, 3> *points, double maxDistance, long *ids, int *ranks, double *distances) const;
 #endif
 
 protected:

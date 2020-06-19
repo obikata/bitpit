@@ -1677,6 +1677,118 @@ void PatchSkdTree::findPointClosestGlobalCell(const std::size_t nPoints, const s
     }
 }
 
+/*!
+* Given the specified points, considered shared on the processes, find the
+* closest cells contained in the tree and evaluates the distance values
+* between those cells and the given points.
+*
+* \param[in] nPoints number of the points
+* \param[in] points points coordinates
+* \param[out] ids on output it will contain the ids of the cells closest
+* to the local points
+* \param[out] ranks on output it will contain the rank indices of the processes
+* owner of the cells closest to the points
+* \param[out] distances on output it will contain the distances
+* between the points and closest cells
+*/
+void PatchSkdTree::findSharedPointClosestGlobalCell(const std::size_t nPoints, const std::array<double, 3> *points,
+                                          long *ids, int *ranks, double *distances) const
+{
+    findSharedPointClosestGlobalCell(nPoints, points, std::numeric_limits<double>::max(), ids, ranks, distances);
+}
+
+
+/*!
+* Given the specified points, considered shared on the processes, find the
+* closest cells contained in the tree and evaluates the distance values
+* between those cells and the given points.
+*
+* \param[in] nPoints number of the points
+* \param[in] points points coordinates
+* \param[in] maxDistance all cells whose distance is greater than
+* this parameters will not be considered for the evaluation of the
+* distance
+* \param[out] ids on output it will contain the ids of the cells closest
+* to the points. If all cells contained in the tree are farther from a point
+* than the maximum distance, the related id will be set to the null id
+* \param[out] ranks on output it will contain the rank indices of the processes
+* owner of the cells closest to the points
+* \param[out] distances on output it will contain the distances
+* between the points and closest cells. If all cells contained in the tree are
+* farther than the maximum distance, the related argument will be set to the
+* maximum representable distance.
+*/
+void PatchSkdTree::findSharedPointClosestGlobalCell(const std::size_t nPoints, const std::array<double, 3> *points,
+                                          double maxDistance, long *ids, int *ranks, double *distances) const
+{
+    // Initialize the cell ids and ranks
+    for (std::size_t i = 0; i < nPoints; i++){
+        ids[i] = Cell::NULL_ID;
+        ranks[i] = -1;
+    }
+
+    // Call local find point closest cell for each global point collected
+
+    // Instantiate global container for distances and ranks
+    std::vector<std::pair<double,int>> globalDistancesRanks(nPoints, std::pair<double, int>(std::numeric_limits<double>::max(), m_rank));
+
+    for (std::size_t ip = 0; ip < nPoints; ip++){
+
+        const std::array<double,3> & point = points[ip];
+        double & distance = globalDistancesRanks[ip].first;
+        long & id = ids[ip];
+        int & rank = globalDistancesRanks[ip].second;
+
+        // Use a maximum distance for each point given by an estimation based on partition
+        // bounding boxes. The distance will be lesser than or equal to the point maximum distance
+        double pointMaxDistance = maxDistance;
+        for (int irank = 0; irank < m_nProcessors; irank++){
+            pointMaxDistance = std::min(getPartitionBox(irank).evalPointMaxDistance(point), pointMaxDistance);
+        }
+
+        // Call local find point closest cell with estimated distance used as maximum distance
+        long nDistanceEvaluations = findPointClosestCell(point, pointMaxDistance, &id, &distance);
+
+    }
+
+    // Communicate the computed distances of the distributed input points to all processes
+    // and retain the indices of the rank owner and the id of the closest cell
+
+    // Prepare MPI custom data type and Operation
+    int blocklengths[3] = {1,1,1};
+    MPI_Aint displacements[3] = {offsetof(SkdCellInfo, distance),
+            offsetof(SkdCellInfo, rank),
+            offsetof(SkdCellInfo, id)};
+    MPI_Datatype types[3] = {MPI_DOUBLE, MPI_INT, MPI_LONG};
+    MPI_Datatype MPI_DRI;
+    MPI_Type_create_struct(3, blocklengths, displacements, types, &MPI_DRI);
+    MPI_Type_commit(&MPI_DRI);
+
+    std::vector<SkdCellInfo> dri_data(nPoints);
+    for (std::size_t ip = 0; ip < nPoints; ip++){
+        auto & val = dri_data[ip];
+        val.distance = globalDistancesRanks[ip].first;
+        val.rank = globalDistancesRanks[ip].second;
+        val.id = ids[ip];
+    }
+
+    MPI_Op MPI_MIN_DRI;
+    MPI_Op_create((MPI_User_function *) minSkdCellInfo, false, &MPI_MIN_DRI);
+
+    // Communicate the closest cells distances, ranks and ids by reduce with custom minimum distance operation
+    // Reduce only the right portion of data to the right process
+    for (int irank = 0; irank < m_nProcessors; irank++){
+        MPI_Allreduce(MPI_IN_PLACE, dri_data.data(), nPoints, MPI_DRI, MPI_MIN_DRI, getCommunicator());
+    }
+
+    // Update distances, rank indices and cell ids
+    for (std::size_t ip = 0; ip < nPoints; ip++){
+        distances[ip] = dri_data[ip].distance;
+        ranks[ip] = dri_data[ip].rank;
+        ids[ip] = dri_data[ip].id;
+    }
+}
+
 #endif
 
 }
