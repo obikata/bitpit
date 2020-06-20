@@ -64,7 +64,7 @@ public:
 
     void getRowPattern(long row, ConstProxyVector<long> *pattern) const override;
     void getRowValues(long row, ConstProxyVector<double> *values) const override;
-    double getRowConstant(long row) const;
+    double getRowConstant(long row) const override;
 
 protected:
     const std::vector<stencil_t> *m_stencils;
