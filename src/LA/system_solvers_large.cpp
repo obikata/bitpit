@@ -156,7 +156,7 @@ void SystemSparseMatrixAssembler::getRowPattern(long row, ConstProxyVector<long>
  * Get the values of the specified row.
  *
  * \param row is the row of the matrix
- * \param pattern on output will contain the values of the specified row
+ * \param values on output will contain the values of the specified row
  */
 void SystemSparseMatrixAssembler::getRowValues(long row, ConstProxyVector<double> *values) const
 {
