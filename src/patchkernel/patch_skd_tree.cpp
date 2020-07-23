@@ -193,9 +193,9 @@ std::array<double, 3> SkdPatchInfo::evalCachedBoxMean(std::size_t rawId) const
 * Default constructor.
 */
 SkdBox::SkdBox()
+    : m_boxMin{  std::numeric_limits<double>::max(),   std::numeric_limits<double>::max(),   std::numeric_limits<double>::max()},
+      m_boxMax{- std::numeric_limits<double>::max(), - std::numeric_limits<double>::max(), - std::numeric_limits<double>::max()}
 {
-    m_boxMin.fill(std::numeric_limits<double>::max());
-    m_boxMax.fill(-1. * std::numeric_limits<double>::max());
 }
 
 /*!
@@ -204,7 +204,7 @@ SkdBox::SkdBox()
 * \param boxMin Minimum coordinate of the bounding box
 * \param boxMax Maximum coordinate of the bounding box
 */
-SkdBox::SkdBox(std::array<double,3> boxMin, std::array<double,3> boxMax)
+SkdBox::SkdBox(const std::array<double,3> &boxMin, const std::array<double,3> &boxMax)
     : m_boxMin(boxMin),
       m_boxMax(boxMax)
 {

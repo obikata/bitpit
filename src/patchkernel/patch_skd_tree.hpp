@@ -64,12 +64,11 @@ protected:
 
 };
 
-class SkdBox{
+class SkdBox {
 
 public:
-
     SkdBox();
-    SkdBox(std::array<double,3> boxMin, std::array<double,3> boxMax);
+    SkdBox(const std::array<double,3> &boxMin, const std::array<double,3> &boxMax);
 
     const std::array<double, 3> & getBoxMin() const;
     const std::array<double, 3> & getBoxMax() const;
@@ -81,13 +80,12 @@ public:
     bool boxIntersectsSphere(const std::array<double,3> &center, double radius) const;
 
 protected:
-
-    std::array<double,3> m_boxMin;
-    std::array<double,3> m_boxMax;
+    std::array<double, 3> m_boxMin;
+    std::array<double, 3> m_boxMax;
 
 };
 
-class SkdNode : public SkdBox{
+class SkdNode : public SkdBox {
 
 friend class PatchSkdTree;
 
