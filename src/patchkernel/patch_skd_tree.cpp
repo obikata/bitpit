@@ -349,9 +349,7 @@ SkdNode::SkdNode(const SkdPatchInfo *patchInfo, std::size_t cellRangeBegin, std:
       m_cellRangeBegin(cellRangeBegin), m_cellRangeEnd(cellRangeEnd),
       m_children({{NULL_ID, NULL_ID}})
 {
-    if (m_cellRangeBegin != m_cellRangeEnd){
-        initializeBoundingBox();
-    }
+    initializeBoundingBox();
 }
 
 /*!
@@ -359,9 +357,17 @@ SkdNode::SkdNode(const SkdPatchInfo *patchInfo, std::size_t cellRangeBegin, std:
 */
 void SkdNode::initializeBoundingBox()
 {
-    const std::vector<std::size_t> &cellRawIds = m_patchInfo->getCellRawIds();
+    // Early return if there are no cells
+    if (m_cellRangeBegin == m_cellRangeEnd){
+        m_boxMin.fill(  std::numeric_limits<double>::max());
+        m_boxMax.fill(- std::numeric_limits<double>::max());
+
+        return;
+    }
 
     // Evaluate the bounding box
+    const std::vector<std::size_t> &cellRawIds = m_patchInfo->getCellRawIds();
+
     m_boxMin = m_patchInfo->getCachedBoxMin(cellRawIds[m_cellRangeBegin]);
     m_boxMax = m_patchInfo->getCachedBoxMax(cellRawIds[m_cellRangeBegin]);
     for (std::size_t n = m_cellRangeBegin + 1; n < m_cellRangeEnd; n++) {
