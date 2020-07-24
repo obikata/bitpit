@@ -700,7 +700,7 @@ long SurfaceSkdTree::findPointClosestGlobalCell(int nPoints, const std::array<do
         }
     }
 
-    // Update distances, rank indices and cell ids
+    // Update output arguments
     for (int i = 0; i < nPoints; ++i) {
         int globalIndex = i + globalPointsOffsets[m_rank];
         SkdGlobalCellDistance &globalCellDistance = globalCellDistances[globalIndex];
