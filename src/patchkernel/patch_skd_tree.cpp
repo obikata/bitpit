@@ -1038,12 +1038,13 @@ void PatchSkdTree::build(std::size_t leafThreshold, bool squeezeStorage)
     m_patchInfo.destroyCache();
 
 #if BITPIT_ENABLE_MPI
-    // Build partition info with partition boxes if the patch is partitioned
+    // Set communicator
     if (patch.isCommunicatorSet()){
-        // Set communicator
-        setCommunicator(getPatch().getCommunicator());
+        setCommunicator(patch.getCommunicator());
+    }
 
-        // Build partition boxes
+    // Build partition info with partition boxes if the patch is partitioned
+    if (patch.isPartitioned()) {
         buildPartitionBoxes();
     }
 #endif

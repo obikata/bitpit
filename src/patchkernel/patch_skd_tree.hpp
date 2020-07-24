@@ -199,11 +199,6 @@ public:
     std::size_t evalMaxDepth(std::size_t rootId = 0) const;
 
 #if BITPIT_ENABLE_MPI
-    void setCommunicator(MPI_Comm communicator);
-    void freeCommunicator();
-    bool isCommunicatorSet() const;
-    const MPI_Comm & getCommunicator() const;
-
     const SkdBox & getPartitionBox(int rank) const;
 #endif
 
@@ -230,9 +225,17 @@ protected:
 
     SkdNode & _getNode(std::size_t nodeId);
 
+#if BITPIT_ENABLE_MPI
+    void setCommunicator(MPI_Comm communicator);
+    void freeCommunicator();
+    bool isCommunicatorSet() const;
+    const MPI_Comm & getCommunicator() const;
+#endif
+
 private:
     void createChildren(std::size_t parentId, std::size_t leaftThreshold);
     void createLeaf(std::size_t nodeId);
+
 #if BITPIT_ENABLE_MPI
     void buildPartitionBoxes();
 #endif
