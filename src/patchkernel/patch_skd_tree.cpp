@@ -1388,10 +1388,12 @@ void PatchSkdTree::buildPartitionBoxes()
     }
 }
 
+
 /*!
 * Get the bounding box associated to a partition.
-* \param[in] rank Index of the rank owner of the target partition
-* \result The bounding box associated to the partition
+*
+* \param[in] rank is the ndex of the rank owner of the target partition
+* \result The bounding box associated to the partition.
 */
 const SkdBox & PatchSkdTree::getPartitionBox(int rank) const
 {
