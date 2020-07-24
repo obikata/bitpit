@@ -186,7 +186,7 @@ std::array<double, 3> SkdPatchInfo::evalCachedBoxMean(std::size_t rawId) const
 /*!
 * \class SkdBox
 *
-* \brief The SkdBox class defines a box of a node of the skd-tree.
+* \brief The SkdBox class defines a box.
 */
 
 /*!
@@ -201,8 +201,8 @@ SkdBox::SkdBox()
 /*!
 * Constructor
 *
-* \param boxMin Minimum coordinate of the bounding box
-* \param boxMax Maximum coordinate of the bounding box
+* \param boxMin is the minimum coordinate of the box
+* \param boxMax is the maximum coordinate of the box
 */
 SkdBox::SkdBox(const std::array<double,3> &boxMin, const std::array<double,3> &boxMax)
     : m_boxMin(boxMin),
@@ -211,10 +211,9 @@ SkdBox::SkdBox(const std::array<double,3> &boxMin, const std::array<double,3> &b
 }
 
 /*!
-* Get the minimum coordinate of the bounding box associated to the node.
+* Get the minimum coordinate of the box.
 *
-* \result The minimum coordinate of the bounding box associated to the
-* box.
+* \result The minimum coordinate of the box.
 */
 const std::array<double, 3> & SkdBox::getBoxMin() const
 {
@@ -222,10 +221,9 @@ const std::array<double, 3> & SkdBox::getBoxMin() const
 }
 
 /*!
-* Get the maximum coordinate of the bounding box associated to the node.
+* Get the maximum coordinate of the box.
 *
-* \result The maximum coordinate of the bounding box associated to the
-* box.
+* \result The maximum coordinate of the box.
 */
 const std::array<double, 3> & SkdBox::getBoxMax() const
 {
@@ -267,14 +265,13 @@ double SkdBox::evalPointMaxDistance(const std::array<double, 3> &point) const
 }
 
 /*!
-* Checks if the specified point is inside the bounding box associated to the
-* node. The bounding box size will be expanded by the specified offset value.
+* Checks if the specified point is inside the box .
+*
+* The box size will be expanded by the specified offset value.
 *
 * \param point is the point
-* \param offset is the offset that will be used to expand the bounding
-* box
-* \result Returns true if the point is inside the inflated bounding box,
-* false otherwise.
+* \param offset is the offset that will be used to expand the box
+* \result Returns true if the point is inside the inflated box, false otherwise.
 */
 bool SkdBox::boxContainsPoint(const std::array<double, 3> &point, double offset) const
 {
@@ -292,13 +289,12 @@ bool SkdBox::boxContainsPoint(const std::array<double, 3> &point, double offset)
 }
 
 /*!
-* Checks if the bounding box associated to the node intersects the
-* sphere with given center and radius.
+* Checks if the box intersects the sphere with given center and radius.
 *
 * \param[in] center is the center of the sphere
 * \param[in] radius is the radius of the sphere
-* \result Returns true if the bounding box associated to the node
-* intersects the sphere with given center and radius, false otherwise.
+* \result Returns true if the box intersects the sphere with given center
+* and radius, false otherwise.
 */
 bool SkdBox::boxIntersectsSphere(const std::array<double, 3> &center, double radius) const
 {
