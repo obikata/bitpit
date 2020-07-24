@@ -1388,26 +1388,6 @@ void PatchSkdTree::buildPartitionBoxes()
 }
 
 /*!
-* Get the minimum coordinate of the bounding box associated to a partition.
-* \param[in] rank Index of the rank owner of the target partition
-* \result The minimum coordinate of the bounding box associated to the partition
-*/
-const std::array<double, 3> & PatchSkdTree::getPartitionBoxMin(int rank) const
-{
-    return m_partitionBoxes[rank].getBoxMin();
-}
-
-/*!
-* Get the maximum coordinate of the bounding box associated to a partition.
-* \param[in] rank Index of the rank owner of the target partition
-* \result The maximum coordinate of the bounding box associated to the partition
-*/
-const std::array<double, 3> & PatchSkdTree::getPartitionBoxMax(int rank) const
-{
-    return m_partitionBoxes[rank].getBoxMax();
-}
-
-/*!
 * Get the bounding box associated to a partition.
 * \param[in] rank Index of the rank owner of the target partition
 * \result The bounding box associated to the partition

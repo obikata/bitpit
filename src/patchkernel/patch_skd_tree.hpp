@@ -204,8 +204,6 @@ public:
     bool isCommunicatorSet() const;
     const MPI_Comm & getCommunicator() const;
 
-    const std::array<double, 3> & getPartitionBoxMin(int rank) const;
-    const std::array<double, 3> & getPartitionBoxMax(int rank) const;
     const SkdBox & getPartitionBox(int rank) const;
 #endif
 
