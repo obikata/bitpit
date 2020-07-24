@@ -760,10 +760,7 @@ MPI_Op SkdGlobalCellDistance::m_MPIMinOperation;
 MPI_Datatype SkdGlobalCellDistance::getMPIDatatype()
 {
     if (!m_MPIDatatypeInitialized) {
-        int blocklengths[3] = {1, 1, 1};
-        MPI_Aint displacements[3] = {offsetof(SkdGlobalCellDistance, m_distance), offsetof(SkdGlobalCellDistance, m_id), offsetof(SkdGlobalCellDistance, m_rank)};
-        MPI_Datatype types[3] = {MPI_DOUBLE, MPI_LONG, MPI_INT};
-        MPI_Type_create_struct(3, blocklengths, displacements, types, &m_MPIDatatype);
+        MPI_Type_contiguous(sizeof(SkdGlobalCellDistance), MPI_CHAR, &m_MPIDatatype);
         MPI_Type_commit(&m_MPIDatatype);
         m_MPIDatatypeInitialized = true;
     }
