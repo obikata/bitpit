@@ -1041,10 +1041,8 @@ void PatchSkdTree::build(std::size_t leafThreshold, bool squeezeStorage)
     // Set communicator
     if (patch.isCommunicatorSet()){
         setCommunicator(patch.getCommunicator());
-    }
 
-    // Build partition info with partition boxes if the patch is partitioned
-    if (patch.isPartitioned()) {
+        // Build partition info with partition boxes if patch has the communicator set
         buildPartitionBoxes();
     }
 #endif
