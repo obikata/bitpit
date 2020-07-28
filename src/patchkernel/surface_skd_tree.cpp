@@ -606,22 +606,6 @@ long SurfaceSkdTree::findPointClosestGlobalCell(int nPoints, const std::array<do
 {
     long nDistanceEvaluations = 0;
 
-    // Early return is the patch is not partitioned
-    const PatchKernel &patch = getPatch();
-    if (!patch.isPartitioned()) {
-        for (int i = 0; i < nPoints; ++i) {
-            // Evaluate distance
-            nDistanceEvaluations += findPointClosestCell(points[i], maxDistances[i], ids + i, distances + i);
-
-            // The patch is not partitioned, all cells are local
-            ranks[i] = patch.getRank();
-
-        }
-
-        return nDistanceEvaluations;
-
-    }
-
     // Get MPI communicator
     if (!isCommunicatorSet()) {
         throw std::runtime_error("Skd-tree communicator has not been set.");
@@ -686,7 +670,7 @@ long SurfaceSkdTree::findPointClosestGlobalCell(int nPoints, const std::array<do
 
         // Set cell rank
         if (cellId != Cell::NULL_ID) {
-            cellRank = patch.getCellRank(cellId);
+            cellRank = getPatch().getCellRank(cellId);
         }
     }
 
